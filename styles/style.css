@@ -1,0 +1,178 @@
+:root {
+  --grey: rgb(174, 170, 170);
+}
+
+.wrapper {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.map {
+  background-color: var(--grey);
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.add__warehouse {
+  font-size: 20px;
+  font-weight: bold;
+  position: fixed;
+  top: 25px;
+  left: 25px;
+  padding: 10px 15px;
+  background-color: white;
+  border-radius: 15px;
+}
+
+.zoom__out {
+  font-size: 20px;
+  font-weight: bold;
+  position: fixed;
+  top: 25px;
+  right: 25px;
+  padding: 10px 15px;
+  background-color: white;
+  border-radius: 15px;
+}
+
+.openRude {
+  font-size: 20px;
+  font-weight: bold;
+  position: fixed;
+  top: 90px;
+  right: 25px;
+  padding: 10px 15px;
+  background-color: white;
+  border-radius: 15px;
+}
+
+
+.closeModal {
+  /* transition: all 100ms ease; */
+  /* position: absolute; */
+  z-index: -1;
+  display: block;
+  height: 350px;
+  transition: all 500ms ease;
+  width: 500px;
+  background-color: var(--grey);
+  transform: scale(0.5);
+}
+
+.openModal {
+  z-index: 4;
+  transform: scale(2);
+  background-color: #fff;
+  /* transition: all 1000ms ease; */
+  /* height: 700px;
+  width: 1000px; */
+}
+
+/* ------------------------- INPUT ---------------------------------- */
+
+.moduleWindow {
+  padding: 20px;
+  border-radius: 20px;
+  background-color: #fff;
+  /* position: absolute;
+  left: 100px;
+  top: 100px; */
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.module__item {
+  position: relative;
+  line-height: 14px;
+  margin: 0 10px 15px;
+  display: inline-block;
+}
+
+label {
+  color: #bbb;
+  font-size: 14px;
+  text-transform: uppercase;
+  position: absolute;
+  z-index: 2;
+  left: 20px;
+  top: 16px;
+  padding: 0 2px;
+  pointer-events: none;
+  background: white;
+  transition: transform 100ms ease;
+}
+
+input {
+  font-size: 20px;
+  color: #555;
+  outline: none;
+  border: 1px solid #bbb;
+  padding: 10px 20px;
+  border-radius: 20px;
+  position: relative;
+}
+
+input:focus {
+  border-color: #2b96f1;
+}
+
+input:focus+label {
+  color: #2b96f1;
+  transform: translateY(-21px);
+}
+
+input:valid+label {
+  transform: translateY(-21px);
+}
+
+input[type="submit"] {
+  font-size: 16px;
+}
+
+/* --------- END INPUT--------------- */
+
+
+.progress {
+  position: absolute;
+  top: 100px;
+  left: 30px;
+  width: 30px;
+  height: 150px;
+  overflow: hidden;
+  background: linear-gradient(to top, #ff3232 0%, #ff9600 33%, #ffff00 66%, #00ff00 100%);
+}
+
+.closeRude {
+  position: absolute;
+  z-index: -1;
+  display: block;
+  height: 400px;
+  transition: all 500ms ease;
+  width: 700px;
+  background-color: var(--grey);
+  transform: scale(0.5);
+}
+
+.rudeConcentration {
+  z-index: 5;
+  transform: scale(2);
+  background-color: #fff;
+}
+
+/* 
+.closeModal {
+  z-index: -1;
+  display: block;
+  height: 350px;
+  transition: all 500ms ease;
+  width: 500px;
+  background-color: var(--grey);
+  transform: scale(0.5);
+}
+*/
