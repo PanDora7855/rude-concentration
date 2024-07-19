@@ -2,14 +2,12 @@ const addButton = document.querySelector(".add__warehouse");
 const myMap = document.querySelector(".map");
 const box = document.querySelector('.closeModal');
 const zoomOut = document.querySelector('.zoom__out');
-const rudeButton = document.querySelector('.openRude');
 const rude = document.querySelector('.closeRude');
 let input;
 let i = -1;
 
-// newGetD3Data();
-
 const template = `
+    <div class="xButton">X</div>
     <div class="module__item">
         <input type="text" id="warehouseName" name="name"  required>
         <label for="warehouseName">Название склада</label>
@@ -37,8 +35,7 @@ zoomOut.addEventListener('click', e => {
 
     document.querySelector('svg').remove();
     box.classList.toggle('openModal');
-    
-    rudeConcentration.setAttribute('hidden', true);
+
     zoomOut.setAttribute('hidden', true)
 })
 
@@ -73,9 +70,15 @@ function second(ev) {
     myMap.append(newWarehouse);
     myMap.style.cursor = "auto";
 
+    const xButton = document.querySelector('.xButton');
+
     addButton.addEventListener("click", first);
 
     form = document.querySelector("form");
+
+    xButton.addEventListener('click', (e) => {
+        newModuleWindow.remove();
+    })
     form.addEventListener("submit", (e) => {
         e.preventDefault();
 
@@ -89,14 +92,12 @@ function second(ev) {
         document.querySelectorAll('.box').forEach(item => {
             item.setAttribute('hidden', true);
         })
-        rudeButton.removeAttribute('hidden');
+        // rudeButton.removeAttribute('hidden');
         zoomOut.removeAttribute('hidden');
 
+        // getD3('../newDb.json', newWarehouse.classList[0].slice(3, 4));
 
-        // getD3Data('http://localhost:3000/second', newWarehouse.classList[0].slice(3, 4));
-
-        newd3('../newDb.json', newWarehouse.classList[0].slice(3, 4));
-
+        newd3('../real.json');
 
         box.classList.toggle('openModal');
     })
@@ -104,15 +105,12 @@ function second(ev) {
 }
 
 // rudeButton.addEventListener('click', () => {
-//     openRudeConcentration();
+//    ();
 // })
 
-// function openRudeConcentration() {
+// function() {
 //     rudeus();
 // }
-
-
-// rude.classList.toggle('rudeConcentration');
 
 // function third(i) {
 //     document.querySelectorAll('.box').forEach(item => {
@@ -146,4 +144,31 @@ function makeData(form) {
     return json;
 }
 
+const header = document.querySelector('.table__header');
+const table = document.querySelector('.table');
+const headerNavItems = document.querySelectorAll('.list-item');
 
+
+header.addEventListener('mousedown', getHeaderY);
+
+function getHeaderY(e) {
+    let flag = true;
+    for (i of headerNavItems) {
+        if (e.target == i) {
+            flag = false;
+        }
+    }
+    if (flag) {
+        header.removeEventListener('mousedown', getHeaderY);
+        document.addEventListener('mousemove', mouseMove);
+        document.addEventListener('mouseup', e => {
+            document.removeEventListener('mousemove', mouseMove)
+            header.addEventListener('mousedown', getHeaderY);
+        }, { once: true })
+    }
+
+}
+
+function mouseMove(ev) {
+    table.style.height = document.body.scrollHeight - ev.clientY + 'px';
+}

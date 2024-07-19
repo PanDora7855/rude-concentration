@@ -1,10 +1,19 @@
 async function newd3(url, num) {
     await fetch(url)
         .then(data => data.json())
+        .then(data => data.sklads[1])
         .then(data => {
             console.log(data);
             const width = 1000;
             const height = 700;
+
+            const color = d3.piecewise(d3.interpolateRgb, ["green", "yellow", "orange", "red"]);
+
+            // console.log(color(0.2682131636665415));
+
+            let a = 'rgb(123, 0, 0)';
+            console.log(a.replace(')', ', 0.7)'));
+            
 
             // This custom tiling function adapts the built-in binary tiling function
             // for the appropriate aspect ratio when the treemap is zoomed-in.
@@ -22,8 +31,9 @@ async function newd3(url, num) {
                     return d3.treemapBinary(node, 0, 0, width, height);
                 }
             }
-            
+
             function tile(node, x0, y0, x1, y1) {
+                // console.log(node);
                 getRightTree(node, flag);
                 for (const child of node.children) {
                     child.x0 = x0 + child.x0 / width * (x1 - x0);
@@ -35,8 +45,16 @@ async function newd3(url, num) {
 
             // Compute the layout.
             const hierarchy = d3.hierarchy(data)
-                .sum(d => d.value)
-                .sort((a, b) => b.value - a.value);
+                .sum(d => {
+                    // console.log(d);
+                    return d.volume
+                })
+                .sort((a, b) => {
+                    // console.log(a, b);
+                    return b.volume - a.volume
+                });
+
+            // console.log(hierarchy);
             let root = d3.treemap().tile(tile)(hierarchy);
 
             // Create the scales.
@@ -45,24 +63,34 @@ async function newd3(url, num) {
 
             // Formatting utilities.
             const format = d3.format(",d");
-            const name = d => d.ancestors().reverse().map(d => d.data.name).join("/");
+            const name = d => d.ancestors().reverse().map(d => d.data.sklad_name == undefined ? d.data.sector_name : d.data.sklad_name).join("/");
 
             const wrapper = d3.select('.closeModal');
 
             // Create the SVG container.
             const svg = wrapper.append("svg")
-                .attr("viewBox", [0.5, -30.5, width, height + 30])
+                .attr("viewBox", [0.5, -30.5, width, height])
                 .attr("width", width)
-                .attr("height", height + 30)
+                .attr("height", height)
                 .attr("style", "max-width: 100%; height: auto;")
                 .style("font", "10px sans-serif");
 
-            // console.log(root.children.concat(root));
+
+            // if (url == '../newDb.json') {
+            //     console.log(root);
+            //     console.log(root.children);
+            //     console.log(root.children.concat(root));
+            // } else {
+            console.log(root);
+            console.log(root.children);
+            console.log(root.children.concat(root));
+            // }
+
+
 
             // Display the root.
             let group = svg.append("g")
                 .call(render, root);
-
 
             function render(group, root) {
                 const node = group
@@ -70,20 +98,28 @@ async function newd3(url, num) {
                     .data(root.children.concat(root))
                     .join("g");
 
-                node.filter(d => d === root ? d.parent : d.children)
+                node.filter(d => {
+                    // console.log(d, root);
+                    return d === root ? d.parent : d.children
+                })
                     .attr("cursor", "pointer")
-                    .on("click", (event, d) => d === root ? zoomout(root) : zoomin(d));
+                    .on("click", (event, d) => {
+                        // console.log(d);
+                        return d === root ? zoomout(root) : zoomin(d);
+                    })
 
                 node.append("title")
-                    .text(d => `${name(d)}\n${format(d.value)}`);
+                    .text(d => {
+                        // console.log(d.ancestors());
+                        return `${name(d)}\n${format(d.data.volume == undefined ? d.data.occupied_place : d.data.volume)}`;
+                    });
 
                 node.append("rect")
-                    .attr("id", d => {
-                        // console.log(d);
-                        (d.leafUid = d3.select("leaf")).id
-                    })
-                    .attr("fill", d => d === root ? "#fff" : d.children ? "#ccc" : "#ddd")
-                    .attr("stroke", "#fff");
+                    .attr("id", d => (d.leafUid = d3.select("leaf")).id)
+                    // .attr('class', d => d === root ? "rectRoot" : "rectChild")
+                    .attr("fill", d => (d === root ? "#fff" : `${color(d.value / d.parent.value)}`))
+                    .attr("stroke", "#fff")
+                    // .style('background', d => (d === root ? "#fff" : `${color(d.value / d.parent.value)}`));
 
                 node.append("clipPath")
                     .attr("id", d => (d.clipUid = d3.select("clip")).id)
@@ -94,13 +130,18 @@ async function newd3(url, num) {
                     .attr("clip-path", d => d.clipUid)
                     .attr("font-weight", d => d === root ? "bold" : null)
                     .selectAll("tspan")
-                    .data(d => (d === root ? name(d) : d.data.name).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value)))
+                    .data(d => {
+                        return (d === root ? name(d) : (d.data.sklad_name == undefined ? d.data.sector_name : d.data.sklad_name)).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value == undefined ? d.data.occupied_place : d.value))
+                    })
                     .join("tspan")
                     .attr("x", 3)
                     .attr("y", (d, i, nodes) => `${(i === nodes.length - 1) * 0.3 + 1.1 + i * 0.9}em`)
                     .attr("fill-opacity", (d, i, nodes) => i === nodes.length - 1 ? 0.7 : null)
                     .attr("font-weight", (d, i, nodes) => i === nodes.length - 1 ? "normal" : null)
-                    .text(d => d);
+                    .text(d => {
+                        // console.log(d);
+                        return d;
+                    });
 
                 group.call(position, root);
             }
@@ -109,14 +150,17 @@ async function newd3(url, num) {
                 group.selectAll("g")
                     .attr("transform", d => d === root ? `translate(0,-30)` : `translate(${x(d.x0)},${y(d.y0)})`)
                     .select("rect")
-                    .attr("width", d => d === root ? width : x(d.x1) - x(d.x0))
+                    .attr("width", d => {
+                        // console.log(d, root, x(d.x1), x(d.x0));
+                        return d === root ? width : x(d.x1) - x(d.x0)
+                    }) //(x(d.x1) - x(d.x0) < 200 ? 200 : (x(d.x1) - x(d.x0) > 333.3 ? 333.3 : x(d.x1) - x(d.x0))
                     .attr("height", d => d === root ? 30 : y(d.y1) - y(d.y0));
             }
 
             // When zooming in, draw the new nodes on top, and fade them in.
             function zoomin(d) {
 
-                console.log(d);
+                // console.log(d);
                 flag = true;
 
                 root = d3.treemap().tile(tile)(hierarchy);
@@ -138,7 +182,7 @@ async function newd3(url, num) {
 
             // When zooming out, draw the old nodes on top, and fade them out.
             function zoomout(d) {
-                console.log(d);
+                // console.log(d);
                 if (d.depth == 1) flag = false
                 root = d3.treemap().tile(tile)(hierarchy);
 

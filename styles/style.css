@@ -2,6 +2,10 @@
   --grey: rgb(174, 170, 170);
 }
 
+body {
+  user-select: none;
+}
+
 .wrapper {
   height: 100vh;
   width: 100vw;
@@ -14,8 +18,8 @@
   background-color: var(--grey);
   height: 100%;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  /* align-items: center;
+  justify-content: center; */
 }
 
 .add__warehouse {
@@ -40,7 +44,7 @@
   border-radius: 15px;
 }
 
-.openRude {
+/* .openRude {
   font-size: 20px;
   font-weight: bold;
   position: fixed;
@@ -49,12 +53,14 @@
   padding: 10px 15px;
   background-color: white;
   border-radius: 15px;
-}
+} */
 
 
 .closeModal {
   /* transition: all 100ms ease; */
-  /* position: absolute; */
+  position: absolute;
+  top: 250px;
+  left: 600px;
   z-index: -1;
   display: block;
   height: 350px;
@@ -76,7 +82,7 @@
 /* ------------------------- INPUT ---------------------------------- */
 
 .moduleWindow {
-  padding: 20px;
+  padding: 40px 20px 20px;
   border-radius: 20px;
   background-color: #fff;
   /* position: absolute;
@@ -176,3 +182,99 @@ input[type="submit"] {
   transform: scale(0.5);
 }
 */
+
+.xButton {
+  padding: 5px;
+  cursor: pointer;
+  position: absolute;
+  right: 15px;
+  top: 7px;
+}
+
+/* -----------------------------  TABLE  ---------------------------- */
+
+.table {
+  display: flex;
+  position: fixed;
+  z-index: 10;
+  bottom: 0;
+  width: 100%;
+  min-height: 100px;
+  max-height: 700px;
+  background-color: #fff;
+  border-top: 2px solid #000;
+}
+
+.table__left {
+  display: flex;
+  flex-direction: column;
+  width: 80%;
+}
+
+.table__header {
+  height: 69px;
+  display: flex;
+  flex-direction: row;
+  border-bottom: 1px solid #000;
+  cursor: ns-resize;
+}
+
+.table__nav {
+  padding: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  list-style: none;
+  justify-content: space-evenly;
+}
+
+.list-item {
+  padding: 8px 10px;
+  cursor: pointer;
+}
+
+.table__data {}
+
+.table__right {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 10px;
+  width: 40%;
+  border-left: 2px solid #000;
+}
+
+.right__header {
+  display: flex;
+  justify-content: center;
+  border-bottom: 1px solid #000;
+  width: 100%;
+  min-height: 59px;
+}
+
+.right__header > input {
+  width: 90%;
+  height: 26px;
+}
+
+.find__header {
+  width: 100%;
+}
+
+.right__find {
+  width: 100%;
+}
+
+.table__left-nav {
+  padding: 0;
+  justify-content: space-around;
+  display: flex;
+  list-style: none;
+}
+
+.find-item__header {}
+
+.data-items {}
+
+
+/* -----------------------------  TABLE-END  ------------------------ */

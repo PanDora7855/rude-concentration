@@ -1,130 +1,185 @@
-async function getD3Data(url, num) {
+async function getD3(url, num) {
     await fetch(url)
-        .then((data) => data.json())
-        .then((data) => data[num])
-        .then((data) => {
-
-            // console.log(data, num);
-            // console.log(data.children);
-
+        .then(data => data.json())
+        .then(data => {
+            console.log(data);
             const width = 1000;
-            const height = 700;
+            const height = 600;
 
-            // Create the color scale.
-            const color = d3.scaleOrdinal(
-                d3.quantize(d3.interpolateRainbow, data.children.length + 1)
-            );
+            // This custom tiling function adapts the built-in binary tiling function
+            // for the appropriate aspect ratio when the treemap is zoomed-in.
+
+            // treemaDice выставляет элементы по все высоте (то есть в ряды)
+
+            let treemap;
+            let flag = false;
+
+            function getRightTree(node, flag) {
+                if (flag == false) {
+                    return d3.treemapDice(node, 0, 0, width, height);
+                }
+                else {
+                    return d3.treemapBinary(node, 0, 0, width, height);
+                }
+            }
+
+            function tile(node, x0, y0, x1, y1) {
+                // console.log(x0, y0, x1, y1);
+                getRightTree(node, flag);
+                for (const child of node.children) {
+                    // console.log(child);
+                    child.x0 = x0 + child.x0 / width * (x1 - x0); 
+                    child.x1 = x0 + child.x1 / width * (x1 - x0);
+                    child.y0 = y0 + child.y0 / height * (y1 - y0);
+                    child.y1 = y0 + child.y1 / height * (y1 - y0);
+                }
+            }
 
             // Compute the layout.
-            const hierarchy = d3
-                .hierarchy(data)
-                .sum((d) => d.value)
-                .sort((a, b) => b.height - a.height || b.value - a.value);
-
-            // console.log(hierarchy);
-
-            const root = d3
-                .partition() // добавляет координаты x1,x2,y1,y2 по size
-                .size([height, ((hierarchy.height + 1) * width) / 3]) // меняя число можно делать колонки
-                (hierarchy); // эта строка равносильна root = root(hierarchy) если бы у root был бы let вместо const
-
-            // Create the SVG container.
-            const warehouse = d3.select(".closeModal");
-
-            const svg = warehouse.append("svg")
-                .attr("viewBox", [0, 0, width, height])
-                .attr("width", width)
-                .attr("height", height)
-                .attr("style", "max-width: 100%; height: auto; font: 10px sans-serif;");
-
-            // console.log(root);
-            console.log(root.descendants());
-
-            // Append cells.
-            const cell = svg
-                .selectAll("g")
-                .data(root.descendants())
-                .join("g")
-                .attr("transform", (d) => `translate(${d.y0},${d.x0})`);
-
-
-            const rect = cell
-                .append("rect")
-                .attr("width", (d) => d.y1 - d.y0 - 1)
-                .attr("height", (d) => rectHeight(d))
-                .attr("fill-opacity", 0.6)
-                .attr("fill", (d) => {
-                    if (!d.depth) return "#ccc";
-                    while (d.depth > 1) d = d.parent;
-                    return color(d.data.name);
+            const hierarchy = d3.hierarchy(data)
+                .sum(d => {
+                    // console.log(d);
+                    return d.value
                 })
-                .style("cursor", "pointer")
-                .on("click", clicked);
-
-            const text = cell
-                .append("text")
-                .style("user-select", "none")
-                .attr("pointer-events", "none")
-                .attr("x", 4)
-                .attr("y", 13)
-                .attr("fill-opacity", (d) => +labelVisible(d));
-
-            text.append("tspan").text((d) => d.data.name);
-
-            const format = d3.format(",d");
-            const tspan = text
-                .append("tspan")
-                .attr("fill-opacity", (d) => labelVisible(d) * 0.7)
-                .text((d) => ` ${format(d.value)}`);
-
-            cell.append("title").text(
-                (d) =>
-                    `${d
-                        .ancestors()
-                        .map((d) => d.data.name)
-                        .reverse()
-                        .join("/")}\n${format(d.value)}
-                    `
-            );
-
-            // On click, change the focus and transitions it into view.
-            let focus = root;
-            function clicked(event, p) {
-                focus = focus === p ? (p = p.parent) : p;
-
-                root.each((d) => {
-                    d.target = {
-                        x0: ((d.x0 - p.x0) / (p.x1 - p.x0)) * height,
-                        x1: ((d.x1 - p.x0) / (p.x1 - p.x0)) * height,
-                        y0: d.y0 - p.y0,
-                        y1: d.y1 - p.y0,
-                    };
+                .sort((a, b) => {
+                    // console.log(a, b);
+                    return b.value - a.value
                 });
 
-                const t = cell
-                    .transition()
+            // console.log(hierarchy);
+            let root = d3.treemap().tile(tile)(hierarchy);
+
+            // console.log(root);
+            // Create the scales.
+            const x = d3.scaleLinear().rangeRound([0, width]);
+            const y = d3.scaleLinear().rangeRound([0, height]);
+
+            // Formatting utilities.
+            const format = d3.format(",d");
+            const name = d => d.ancestors().reverse().map(d => d.data.name).join("/");
+
+            const wrapper = d3.select('.closeModal');
+
+            // Create the SVG container.
+            const svg = wrapper.append("svg")
+                .attr("viewBox", [0.5, -30.5, width, height + 30])
+                .attr("width", width)
+                .attr("height", height + 30)
+                .attr("style", "max-width: 100%; height: auto;")
+                .style("font", "10px sans-serif");
+
+            // console.log(root);
+            // console.log(root.children);
+            // console.log(root.children.concat(root));
+
+            // Display the root.
+            let group = svg.append("g")
+                .call(render, root);
+
+
+            function render(group, root) {
+                const node = group
+                    .selectAll("g")
+                    .data(root.children.concat(root))
+                    .join("g");
+
+                node.filter(d => d === root ? d.parent : d.children)
+                    .attr("cursor", "pointer")
+                    .on("click", (event, d) => {
+                        console.log(d, root);
+                        return d === root ? zoomout(root) : zoomin(d);
+                    })
+
+                node.append("title")
+                    .text(d => {
+                        // console.log(d.ancestors());
+                        return `${name(d)}\n${format(d.value)}`;
+                    });
+
+                node.append("rect")
+                    .attr("id", d => {
+                        // console.log(d);
+                        return (d.leafUid = d3.select("leaf")).id;
+                    })
+                    .attr("fill", d => d === root ? "#fff" : d.children ? "#ccc" : "#ddd")
+                    .attr("stroke", "#fff");
+
+                node.append("clipPath")
+                    .attr("id", d => (d.clipUid = d3.select("clip")).id)
+                    .append("use")
+                    .attr("xlink:href", d => d.leafUid.href);
+
+                node.append("text")
+                    .attr("clip-path", d => d.clipUid)
+                    .attr("font-weight", d => d === root ? "bold" : null)
+                    .selectAll("tspan")
+                    .data(d => {
+                        // console.log(d === root ? name(d) : d.data.name);
+                        return (d === root ? name(d) : d.data.name).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value));
+                    })
+                    .join("tspan")
+                    .attr("x", 3)
+                    .attr("y", (d, i, nodes) => `${(i === nodes.length - 1) * 0.3 + 1.1 + i * 0.9}em`)
+                    .attr("fill-opacity", (d, i, nodes) => i === nodes.length - 1 ? 0.7 : null)
+                    .attr("font-weight", (d, i, nodes) => i === nodes.length - 1 ? "normal" : null)
+                    .text(d => d);
+
+                group.call(position, root);
+            }
+
+            function position(group, root) {
+                group.selectAll("g")
+                    .attr("transform", d => {
+                        // console.log(d);
+                        return d === root ? `translate(0,-30)` : `translate(${x(d.x0)},${y(d.y0)})`;
+                    })
+                    .select("rect")
+                    .attr("width", d => d === root ? width : x(d.x1) - x(d.x0))
+                    .attr("height", d => d === root ? 30 : y(d.y1) - y(d.y0));
+            }
+
+            // When zooming in, draw the new nodes on top, and fade them in.
+            function zoomin(d) {
+
+                // console.log(d);
+                flag = true;
+
+                root = d3.treemap().tile(tile)(hierarchy);
+
+                const group0 = group.attr("pointer-events", "none");
+                const group1 = group = svg.append("g").call(render, d);
+
+                x.domain([d.x0, d.x1]);
+                y.domain([d.y0, d.y1]);
+
+                svg.transition()
                     .duration(750)
-                    .attr(
-                        "transform",
-                        (d) => `translate(${d.target.y0},${d.target.x0})`
-                    );
-
-                rect.transition(t).attr("height", (d) => rectHeight(d.target));
-                text.transition(t).attr(
-                    "fill-opacity",
-                    (d) => +labelVisible(d.target)
-                );
-                tspan
-                    .transition(t)
-                    .attr("fill-opacity", (d) => labelVisible(d.target) * 0.7);
+                    .call(t => group0.transition(t).remove()
+                        .call(position, d.parent))
+                    .call(t => group1.transition(t)
+                        .attrTween("opacity", () => d3.interpolate(0, 1))
+                        .call(position, d));
             }
 
-            function rectHeight(d) {
-                return d.x1 - d.x0 - Math.min(1, (d.x1 - d.x0) / 2);
-            }
+            // When zooming out, draw the old nodes on top, and fade them out.
+            function zoomout(d) {
+                // console.log(d);
+                if (d.depth == 1) flag = false
+                root = d3.treemap().tile(tile)(hierarchy);
 
-            function labelVisible(d) {
-                return d.y1 <= width && d.y0 >= 0 && d.x1 - d.x0 > 16;
+                const group0 = group.attr("pointer-events", "none");
+                const group1 = group = svg.insert("g", "*").call(render, d.parent);
+
+                x.domain([d.parent.x0, d.parent.x1]);
+                y.domain([d.parent.y0, d.parent.y1]);
+
+                svg.transition()
+                    .duration(750)
+                    .call(t => group0.transition(t).remove()
+                        .attrTween("opacity", () => d3.interpolate(1, 0))
+                        .call(position, d))
+                    .call(t => group1.transition(t)
+                        .call(position, d.parent));
             }
-        });
+        })
 }
