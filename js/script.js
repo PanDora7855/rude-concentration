@@ -2,7 +2,8 @@ const addButton = document.querySelector(".add__warehouse");
 const myMap = document.querySelector(".map");
 const box = document.querySelector('.closeModal');
 const zoomOut = document.querySelector('.zoom__out');
-const rude = document.querySelector('.closeRude');
+const rudeModal = document.querySelector('.closeRude');
+const rudeButton = document.querySelector('.openRude');
 let input;
 let i = -1;
 
@@ -88,40 +89,18 @@ function second(ev) {
         newModuleWindow.remove();
     });
 
-    newWarehouse.addEventListener('click', (e) => {
+    newWarehouse.addEventListener('click', async (e) => {
         document.querySelectorAll('.box').forEach(item => {
             item.setAttribute('hidden', true);
         })
-        // rudeButton.removeAttribute('hidden');
         zoomOut.removeAttribute('hidden');
 
-        // getD3('../newDb.json', newWarehouse.classList[0].slice(3, 4));
-
-        newd3('../real.json');
+        await newd3('../real.json', newWarehouse.classList[0].slice(3, 4));
 
         box.classList.toggle('openModal');
     })
 
 }
-
-// rudeButton.addEventListener('click', () => {
-//    ();
-// })
-
-// function() {
-//     rudeus();
-// }
-
-// function third(i) {
-//     document.querySelectorAll('.box').forEach(item => {
-//         item.classList.add('closeModal');
-//     })
-//     zoomOut.removeAttribute('hidden');
-
-//     getD3Data('http://localhost:3000/second', i);
-
-//     box.classList.toggle('openModal');
-// }
 
 function postData(url, data) {
     fetch(url, {
@@ -171,4 +150,16 @@ function getHeaderY(e) {
 
 function mouseMove(ev) {
     table.style.height = document.body.scrollHeight - ev.clientY + 'px';
+}
+
+rudeButton.addEventListener('click', openRudeConcentration);
+
+
+function openRudeConcentration(e) {
+    if (rudeModal.classList.contains('rudeConcentration')) {
+        rudeModal.querySelector('svg').remove();
+    }
+    rudeModal.classList.toggle('rudeConcentration');
+    table.classList.toggle('table_off');
+    rudeConcentration();
 }

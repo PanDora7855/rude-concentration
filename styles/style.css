@@ -18,8 +18,8 @@ body {
   background-color: var(--grey);
   height: 100%;
   display: flex;
-  /* align-items: center;
-  justify-content: center; */
+  align-items: center;
+  justify-content: center; 
 }
 
 .add__warehouse {
@@ -44,7 +44,7 @@ body {
   border-radius: 15px;
 }
 
-/* .openRude {
+.openRude {
   font-size: 20px;
   font-weight: bold;
   position: fixed;
@@ -53,7 +53,7 @@ body {
   padding: 10px 15px;
   background-color: white;
   border-radius: 15px;
-} */
+}
 
 
 .closeModal {
@@ -155,19 +155,21 @@ input[type="submit"] {
 }
 
 .closeRude {
-  position: absolute;
+  /* position: absolute; */
   z-index: -1;
   display: block;
   height: 400px;
+  height: 800px;
   transition: all 500ms ease;
   width: 700px;
+  width: 1400px;
   background-color: var(--grey);
-  transform: scale(0.5);
+  /* transform: scale(0.5); */
 }
 
 .rudeConcentration {
   z-index: 5;
-  transform: scale(2);
+  /* transform: scale(2); */
   background-color: #fff;
 }
 
@@ -203,6 +205,10 @@ input[type="submit"] {
   max-height: 700px;
   background-color: #fff;
   border-top: 2px solid #000;
+}
+
+.table_off {
+  display: none;
 }
 
 .table__left {
@@ -278,3 +284,9 @@ input[type="submit"] {
 
 
 /* -----------------------------  TABLE-END  ------------------------ */
+
+.cube {
+  width: 1px;
+  height: 1px;
+  background-color: black;
+}

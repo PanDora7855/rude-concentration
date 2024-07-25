@@ -1,19 +1,13 @@
 async function newd3(url, num) {
     await fetch(url)
         .then(data => data.json())
-        .then(data => data.sklads[1])
+        .then(data => data.sklads[num])
         .then(data => {
-            console.log(data);
+            // console.log(data);
             const width = 1000;
             const height = 700;
 
             const color = d3.piecewise(d3.interpolateRgb, ["green", "yellow", "orange", "red"]);
-
-            // console.log(color(0.2682131636665415));
-
-            let a = 'rgb(123, 0, 0)';
-            console.log(a.replace(')', ', 0.7)'));
-            
 
             // This custom tiling function adapts the built-in binary tiling function
             // for the appropriate aspect ratio when the treemap is zoomed-in.
@@ -59,7 +53,7 @@ async function newd3(url, num) {
 
             // Create the scales.
             const x = d3.scaleLinear().rangeRound([0, width]);
-            const y = d3.scaleLinear().rangeRound([0, height]);
+            const y = d3.scaleLinear().rangeRound([0, height - 30]);
 
             // Formatting utilities.
             const format = d3.format(",d");
@@ -81,9 +75,9 @@ async function newd3(url, num) {
             //     console.log(root.children);
             //     console.log(root.children.concat(root));
             // } else {
-            console.log(root);
-            console.log(root.children);
-            console.log(root.children.concat(root));
+            // console.log(root);
+            // console.log(root.children);
+            // console.log(root.children.concat(root));
             // }
 
 
@@ -92,21 +86,22 @@ async function newd3(url, num) {
             let group = svg.append("g")
                 .call(render, root);
 
-            function render(group, root) {
+            async function render(group, root) {
                 const node = group
                     .selectAll("g")
                     .data(root.children.concat(root))
                     .join("g");
 
-                node.filter(d => {
-                    // console.log(d, root);
-                    return d === root ? d.parent : d.children
-                })
+                node.filter(d => d === root ? d.parent : d.children)
                     .attr("cursor", "pointer")
                     .on("click", (event, d) => {
                         // console.log(d);
                         return d === root ? zoomout(root) : zoomin(d);
                     })
+
+                node.filter(d => d.children == undefined)
+                    .attr('cursor', 'pointer')
+                    .on('click', openRudeConcentration)
 
                 node.append("title")
                     .text(d => {
@@ -119,16 +114,21 @@ async function newd3(url, num) {
                     // .attr('class', d => d === root ? "rectRoot" : "rectChild")
                     .attr("fill", d => (d === root ? "#fff" : `${color(d.value / d.parent.value)}`))
                     .attr("stroke", "#fff")
-                    // .style('background', d => (d === root ? "#fff" : `${color(d.value / d.parent.value)}`));
+                // .style('background', d => (d === root ? "#fff" : `${color(d.value / d.parent.value)}`));
 
                 node.append("clipPath")
                     .attr("id", d => (d.clipUid = d3.select("clip")).id)
                     .append("use")
-                    .attr("xlink:href", d => d.leafUid.href);
+                    .attr("xlink:href", d => {
+                        return d.leafUid.href
+                    });
 
                 node.append("text")
                     .attr("clip-path", d => d.clipUid)
                     .attr("font-weight", d => d === root ? "bold" : null)
+                    .attr("fill-opacity", d => {
+                        return (x(d.x1) - x(d.x0) > 60 || y(d.y1) - y(d.y0) > 60) ? 1 : 0;
+                    })
                     .selectAll("tspan")
                     .data(d => {
                         return (d === root ? name(d) : (d.data.sklad_name == undefined ? d.data.sector_name : d.data.sklad_name)).split(/(?=[A-Z][^A-Z])/g).concat(format(d.value == undefined ? d.data.occupied_place : d.value))
@@ -136,14 +136,17 @@ async function newd3(url, num) {
                     .join("tspan")
                     .attr("x", 3)
                     .attr("y", (d, i, nodes) => `${(i === nodes.length - 1) * 0.3 + 1.1 + i * 0.9}em`)
-                    .attr("fill-opacity", (d, i, nodes) => i === nodes.length - 1 ? 0.7 : null)
                     .attr("font-weight", (d, i, nodes) => i === nodes.length - 1 ? "normal" : null)
                     .text(d => {
                         // console.log(d);
                         return d;
                     });
 
-                group.call(position, root);
+
+
+
+                await group.call(position, root);
+                changeInfo();
             }
 
             function position(group, root) {
@@ -151,15 +154,13 @@ async function newd3(url, num) {
                     .attr("transform", d => d === root ? `translate(0,-30)` : `translate(${x(d.x0)},${y(d.y0)})`)
                     .select("rect")
                     .attr("width", d => {
-                        // console.log(d, root, x(d.x1), x(d.x0));
                         return d === root ? width : x(d.x1) - x(d.x0)
-                    }) //(x(d.x1) - x(d.x0) < 200 ? 200 : (x(d.x1) - x(d.x0) > 333.3 ? 333.3 : x(d.x1) - x(d.x0))
+                    })
                     .attr("height", d => d === root ? 30 : y(d.y1) - y(d.y0));
             }
 
             // When zooming in, draw the new nodes on top, and fade them in.
             function zoomin(d) {
-
                 // console.log(d);
                 flag = true;
 
@@ -203,3 +204,19 @@ async function newd3(url, num) {
         })
 }
 
+
+
+function changeInfo() {
+    const allRect = document.querySelectorAll('rect');  // можно поставить поиск по тегу g 
+    allRect.forEach(item => {
+        item.addEventListener('contextmenu', e => {
+            console.log(item);
+        })
+    })
+}
+
+function openRudeConcentration(e) {
+    rudeModal.classList.toggle('rudeConcentration');
+    table.classList.toggle('table_off');
+    rudeConcentration();
+}
